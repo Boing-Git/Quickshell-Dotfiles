@@ -35,40 +35,6 @@ PanelWindow {
     }
     color: "transparent"
 
-    // Elastic strings linking screen corners (0,0) to selectionBox corners
-    PhysicsString {
-        id: sTL
-        anchors.fill: parent
-        visible: selectionBox.isDragging
-        anchorPoint: Qt.point(0, 0)
-        targetPoint: Qt.point(selectionBox.x, selectionBox.y)
-        stringColor: Colors.secondary.base
-    }
-    PhysicsString {
-        id: sTR
-        anchors.fill: parent
-        visible: selectionBox.isDragging
-        anchorPoint: Qt.point(root.width, 0)
-        targetPoint: Qt.point(selectionBox.x + selectionBox.width, selectionBox.y)
-        stringColor: Colors.secondary.base
-    }
-    PhysicsString {
-        id: sBL
-        anchors.fill: parent
-        visible: selectionBox.isDragging
-        anchorPoint: Qt.point(0, root.height)
-        targetPoint: Qt.point(selectionBox.x, selectionBox.y + selectionBox.height)
-        stringColor: Colors.secondary.base
-    }
-    PhysicsString {
-        id: sBR
-        anchors.fill: parent
-        visible: selectionBox.isDragging
-        anchorPoint: Qt.point(root.width, root.height)
-        targetPoint: Qt.point(selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height)
-        stringColor: Colors.secondary.base
-    }
-
     Rectangle {
         id: dimLayer
         anchors.fill: parent

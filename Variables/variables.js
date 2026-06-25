@@ -1,3 +1,3 @@
 .pragma library 
 
-var radiusAmount = 0.2
+var radiusAmount = 0.4

@@ -14,9 +14,6 @@ Rectangle {
     width: workspaceLayout.implicitWidth + 24
     height: workspaceLayout.implicitHeight + 16
 
-    border.color: Colors.outline.variant
-    border.width: 1
-
     RowLayout {
         id: workspaceLayout
         anchors.centerIn: parent
