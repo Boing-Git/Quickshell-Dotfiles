@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-// 1. THE HIGH-LEVEL WRAPPER: Exposes properties like title, icon, and activate()
 import Quickshell.Services.SystemTray
 
 import "./Variables/colors.js" as Colors

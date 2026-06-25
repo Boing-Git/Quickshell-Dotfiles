@@ -338,13 +338,15 @@ PanelWindow {
         console.log("[USER ACTION] Wallpaper selected: " + filePath);
         switcherRoot.currentWallpaper = filePath;
 
+        // Dynamically update system colors based on the new image
         Quickshell.execDetached({
-            command: ["awww", "img", filePath, "--transition-type", "center", "--transition-duration", "1.5", "--transition-bezier", "0.05,0.7,0.1,1"]
+            command: ['bash', '-c', `matugen image "${filePath}" --source-color-index 0`]
         });
 
+        // Dynamically update system colors based on the new image
         Quickshell.execDetached({
-            command: ["bash", "-c", "matugen", "image", filePath, "--source-color-index 0"]
-        });
+            command: ['bash', '-c', `qs  kill; sleep .1; qs`]
+        })
     }
 
     // --- Matugen Process ---

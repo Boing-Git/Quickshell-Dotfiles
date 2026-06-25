@@ -28,7 +28,7 @@ Rectangle {
                 readonly property int wsId: modelData
                 property bool isFocused: Hyprland.focusedWorkspace?.id === (wsId + 1)
 
-                radius: Math.min(width, height) * Vars.radiusAmount + 2
+                radius: Math.min(width, height) * Vars.radiusAmount 
                 implicitWidth: 29
                 implicitHeight: 29
 

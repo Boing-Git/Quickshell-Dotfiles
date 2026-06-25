@@ -1,35 +1,35 @@
 .pragma library 
 
 var primary = {
-        base: "#a9c7ff",
-        on_base: "#07305f",
-        container: "#264777",
-        on_container: "#d6e3ff",
-        fixed: "#d6e3ff",
-        fixed_dim: "#a9c7ff",
-        on_fixed: "#001b3d",
-        on_fixed_variant: "#264777",
-        inverse: "#405f90"
+        base: "#b3c5ff",
+        on_base: "#192e60",
+        container: "#314578",
+        on_container: "#dbe1ff",
+        fixed: "#dbe1ff",
+        fixed_dim: "#b3c5ff",
+        on_fixed: "#001849",
+        on_fixed_variant: "#314578",
+        inverse: "#4a5c92"
     }
  var   secondary = {
-            base: "#bdc7dc",
-            on_base: "#273141",
-            container: "#3e4758",
-            on_container: "#d9e3f9",
-            fixed: "#d9e3f9",
-            fixed_dim: "#bdc7dc",
-            on_fixed: "#121c2b",
-            on_fixed_variant: "#3e4758"
+            base: "#c1c6dd",
+            on_base: "#2a3042",
+            container: "#414659",
+            on_container: "#dde2f9",
+            fixed: "#dde2f9",
+            fixed_dim: "#c1c6dd",
+            on_fixed: "#151b2c",
+            on_fixed_variant: "#414659"
         }
 var   tertiary = {
-            base: "#dcbce1",
-            on_base: "#3e2845",
-            container: "#563e5c",
-            on_container: "#f9d8fe",
-            fixed: "#f9d8fe",
-            fixed_dim: "#dcbce1",
-            on_fixed: "#28132f",
-            on_fixed_variant: "#563e5c"
+            base: "#e1bbdc",
+            on_base: "#422741",
+            container: "#5a3d58",
+            on_container: "#ffd6f9",
+            fixed: "#ffd6f9",
+            fixed_dim: "#e1bbdc",
+            on_fixed: "#2b122b",
+            on_fixed_variant: "#5a3d58"
         }
 var   error = {
             base: "#ffb4ab",
@@ -38,28 +38,28 @@ var   error = {
             on_container: "#ffdad6"
         }
 var  surface = {
-            base: "#111318",
-            on_base: "#e2e2e9",
-            variant: "#43474e",
-            on_variant: "#c4c6cf",
-            dim: "#111318",
-            bright: "#37393e",
-            container_lowest: "#0c0e13",
-            container_low: "#191c20",
-            container: "#1d2024",
-            container_high: "#282a2f",
-            container_highest: "#33353a",
-            inverse: "#e2e2e9",
-            inverse_on: "#2e3035",
-            tint: "#a9c7ff"
+            base: "#121318",
+            on_base: "#e3e2e9",
+            variant: "#45464f",
+            on_variant: "#c5c6d0",
+            dim: "#121318",
+            bright: "#38393f",
+            container_lowest: "#0d0e13",
+            container_low: "#1a1b21",
+            container: "#1e1f25",
+            container_high: "#292a2f",
+            container_highest: "#33343a",
+            inverse: "#e3e2e9",
+            inverse_on: "#2f3036",
+            tint: "#b3c5ff"
         }
 var   outline = {
-            base: "#8e9099",
-            variant: "#43474e"
+            base: "#8f909a",
+            variant: "#45464f"
         }
 var   background = {
-            base: "#111318",
-            on_base: "#e2e2e9"
+            base: "#121318",
+            on_base: "#e3e2e9"
         }
 var  shadow = "#000000"
 var  scrim = "#000000"
