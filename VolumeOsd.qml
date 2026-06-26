@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 
-import "./Variables/colors.js" as Colors
 import "./Variables/variables.js" as Vars
 
 Scope {
@@ -33,7 +32,7 @@ Scope {
         NumberAnimation {
             duration: 250
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: root.m3Expressive
+            easing.bezierCurve: Vars.m3Expressive
         }
     }
 
@@ -131,7 +130,7 @@ Scope {
                 NumberAnimation {
                     duration: 350
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: root.m3Expressive
+                    easing.bezierCurve: Vars.m3Expressive
                 }
             }
 
@@ -139,12 +138,12 @@ Scope {
                 NumberAnimation {
                     duration: 250
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: root.m3Expressive
+                    easing.bezierCurve: Vars.m3Expressive
                 }
             }
 
-            color: Colors.primary.base
-            radius: Math.min(width, height) * Vars.radiusAmount
+            color: Theme.surface
+            radius: Vars.radiusExtraLarge
 
             RowLayout {
                 id: rowLayout
@@ -158,7 +157,7 @@ Scope {
 
                     font.family: "Material Symbols Outlined"
                     font.pixelSize: 24
-                    color: Colors.primary.on_base
+                    color: Theme.on_surface
                     text: root.volumeIcon
 
                     onTextChanged: {
@@ -169,8 +168,8 @@ Scope {
 
                     SequentialAnimation {
                         id: iconPop
-                        NumberAnimation { target: iconText; property: "scale"; to: 1.25; duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: root.m3Expressive }
-                        NumberAnimation { target: iconText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: root.m3Expressive }
+                        NumberAnimation { target: iconText; property: "scale"; to: 1.25; duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
+                        NumberAnimation { target: iconText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
                     }
 
                     // Click the icon to quickly toggle mute status
@@ -189,7 +188,7 @@ Scope {
                     id: sliderTrack
                     Layout.fillWidth: true
                     implicitHeight: 12
-                    color: Colors.primary.container
+                    color: Theme.primary_container
                     radius: osdContainer.radius - spacingValue
 
                     // Active Fill Bar
@@ -197,7 +196,7 @@ Scope {
                         anchors.left: parent.left
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
-                        color: Colors.primary.on_container
+                        color: Theme.on_primary_container
                         radius: parent.radius
                         width: parent.width * root.smoothVolume
                     }

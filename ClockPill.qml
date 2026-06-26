@@ -1,34 +1,123 @@
 import QtQuick
 import Quickshell
 import QtQuick.Layouts
-import "./Variables/colors.js" as Colors
 import "./Variables/variables.js" as Vars
 
-// ==========================================
-// 2. ABSOLUTE CENTER LAYER (Clock Pill)
-// ==========================================
-Rectangle {
-    id: clockPill
+Item {
+    id: root
     width: 100
     height: 40
-    color: Colors.primary.base
-    radius: Math.min(width, height) * Vars.radiusAmount
 
-    // This anchors to the absolute center of the screen bar
-    anchors.centerIn: parent
+    property real pillTranslateX: pillTranslate.x
+    property real pillTranslateY: pillTranslate.y
 
-    SystemClock {
-        id: systemClock
-        precision: SystemClock.Minutes
+    PhysicsString {
+        id: tether
+        width: 300
+        height: 300
+        x: (root.width - width) / 2
+        y: 0
+        z: 0
+        segmentCount: 15 
+        restLength: 1.5 
+        stringColor: Theme.primary
+        stringWidth: 4
+        anchorPoint: Qt.point(width / 2, 0)
+        targetPoint: Qt.point((width / 2) + pillTranslate.x, (root.height / 2) + pillTranslate.y)
     }
 
-    Text {
-        id: clockText
-        font.family: "Rubik"
-        font.pixelSize: 13
-        font.weight: 500
-        color: Colors.primary.on_base
-        anchors.centerIn: parent
-        text: Qt.formatDateTime(systemClock.date, "hh:mm ap").replace(/ [ap]m$/i, "")
+    Rectangle {
+        id: clockRect
+        width: parent.width
+        height: parent.height
+        color: Theme.primary
+        radius: Math.min(width, height) * Vars.radiusAmount
+        z: 1
+
+        transform: Translate {
+            id: pillTranslate
+            x: 0
+            y: 0
+        }
+
+        SystemClock {
+            id: systemClock
+            precision: SystemClock.Minutes
+        }
+
+        Text {
+            id: clockText
+            font.family: Vars.fontFamily
+            font.pixelSize: 14
+            font.weight: 600 // Slightly bolder to match the new crisp aesthetic
+            color: Theme.on_primary
+            anchors.centerIn: parent
+            text: Qt.formatDateTime(systemClock.date, "hh:mm ap").replace(/ [ap]m$/i, "")
+        }
+
+        MouseArea {
+            id: dragArea
+            anchors.fill: parent
+            cursorShape: Qt.OpenHandCursor
+            
+            property real startMouseX: 0
+            property real startMouseY: 0
+            property real startTransX: 0
+            property real startTransY: 0
+            property real stringLength: 65 
+
+            onPressed: (mouse) => {
+                cursorShape = Qt.ClosedHandCursor
+                let mapped = mapToItem(root, mouse.x, mouse.y)
+                startMouseX = mapped.x
+                startMouseY = mapped.y
+                startTransX = pillTranslate.x
+                startTransY = pillTranslate.y
+                
+                returnAnimX.stop()
+                returnAnimY.stop()
+            }
+
+            onPositionChanged: (mouse) => {
+                let mapped = mapToItem(root, mouse.x, mouse.y)
+                let dx = startTransX + (mapped.x - startMouseX)
+                let dy = startTransY + (mapped.y - startMouseY)
+                let distance = Math.sqrt(dx * dx + dy * dy)
+
+                if (distance > stringLength) {
+                    dx = (dx / distance) * stringLength
+                    dy = (dy / distance) * stringLength
+                }
+
+                pillTranslate.x = dx
+                pillTranslate.y = dy
+            }
+
+            onReleased: {
+                cursorShape = Qt.OpenHandCursor
+                returnAnimX.start()
+                returnAnimY.start()
+            }
+        }
+    }
+
+    SpringAnimation {
+        id: returnAnimX
+        target: pillTranslate
+        property: "x"
+        to: 0
+        spring: 1.5     
+        damping: 0.05   
+        mass: 1.5       
+    }
+    
+    SpringAnimation {
+        id: returnAnimY
+        target: pillTranslate
+        property: "y"
+        to: 0
+        spring: 2.0     
+        damping: 0.4    
+        mass: 1.5
     }
 }

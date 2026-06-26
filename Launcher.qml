@@ -1,31 +1,25 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import "./Variables/colors.js" as Colors
 import "./Variables/variables.js" as Vars
 
 PanelWindow {
     id: launcherRoot
     exclusiveZone: -1
     aboveWindows: true
-
-    // 1. Property MUST be defined here
     required property bool visibleState
     visible: visibleState
 
     signal closeRequested()
     signal appLaunched()
 
-    // --- Added Sliding Window Logic ---
     property int offset: 0
-    readonly property int viewLimit: 13
+    readonly property int viewLimit: 16
     
-    // This dynamically updates whenever 'offset' changes
     property var displayModel: {
         var all = DesktopEntries.applications.values;
         return all.slice(offset, offset + viewLimit);
     }
-    // ----------------------------------
 
     HyprlandFocusGrab {
         active: launcherRoot.visible
@@ -45,30 +39,21 @@ PanelWindow {
     }
 
     color: "transparent"
-    implicitHeight: 100
+    implicitHeight: 110
 
     Rectangle {
         id: launcherRect
         anchors.fill: parent
-        color: Colors.primary.base
+        color: Theme.surface
         radius: Math.min(width, height) * Vars.radiusAmount
         opacity: visibleState ? 1.0 : 0.0
         scale: visibleState ? 1.0 : 0.95
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: 300
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: [0, 0, 0.05, 0.7, 0.1, 1.0, 1, 1]
-            }
+            NumberAnimation { duration: 300; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
         }
-
         Behavior on scale {
-            NumberAnimation {
-                duration: 300
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: [0, 0, 0.05, 0.7, 0.1, 1.0, 1, 1]
-            }
+            NumberAnimation { duration: 300; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
         }
 
         focus: true
@@ -77,51 +62,41 @@ PanelWindow {
         ListView {
             id: appListView
             anchors.fill: launcherRect
+            anchors.margins: 12
             orientation: ListView.Horizontal
             clip: true
-            leftMargin: 5
-
-            // --- Updated to use the filtered model ---
+            spacing: 4
             model: displayModel
-            // -----------------------------------------
 
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.NoButton
-                // Added hoverEnabled to ensure wheel events are captured correctly
                 hoverEnabled: true
 
                 onWheel: wheel => {
                     var total = DesktopEntries.applications.values.length;
-                    // Adjust offset instead of contentX
                     if (wheel.angleDelta.y < 0) { 
-                        // Scroll Right: add one if not at the end
                         if (offset + viewLimit < total) offset++;
                     } else if (wheel.angleDelta.y > 0) {
-                        // Scroll Left: remove one if not at the start
                         if (offset > 0) offset--;
                     }
                 }
             }
 
             delegate: Item {
-                width: 140
+                width: 110
                 height: parent.height
 
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 4
-                    color: Colors.primary.on_base
-                    // Perfectly matched curve logic
-                    radius: launcherRect.radius - anchors.margins
+                    // Blanket Style: Soft container color on hover instead of heavy contrast
+                    color: Theme.primary_container
+                    radius: Math.min(width, height) * Vars.radiusAmount
                     opacity: itemMouseArea.containsMouse ? 1.0 : 0.0
 
                     Behavior on opacity {
-                        NumberAnimation {
-                            duration: 300
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: [0, 0.05, 0.7, 0.1, 1.0]
-                        }
+                        NumberAnimation { duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
                     }
                 }
 
@@ -130,6 +105,7 @@ PanelWindow {
                     anchors.fill: parent
                     hoverEnabled: true
                     preventStealing: true
+                    cursorShape: Qt.PointingHandCursor
 
                     onClicked: {
                         Quickshell.execDetached({
@@ -141,40 +117,38 @@ PanelWindow {
                 }
 
                 Column {
-                    anchors.fill: parent
-                    anchors.topMargin: 10
-                    anchors.bottomMargin: 10
-                    spacing: 8
-                    opacity: itemMouseArea.containsMouse ? 0.8 : 1.0
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 300
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: [0, 0, 0.05, 0.7, 0.1, 1.0, 1, 1]
-                        }
-                    }
+                    anchors.centerIn: parent
+                    spacing: 12
 
                     Image {
-                        width: 32
-                        height: 32
+                        width: 36
+                        height: 36
                         anchors.horizontalCenter: parent.horizontalCenter
                         source: modelData.icon ? "image://icon/" + modelData.icon : ""
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
+                        
+                        // Icon brightens on hover
+                        opacity: itemMouseArea.containsMouse ? 1.0 : 0.8
+                        Behavior on opacity { NumberAnimation { duration: 250 } }
                     }
 
                     Text {
-                        width: parent.width
-                        font.family: "Rubik"
+                        width: 90
+                        font.family: Vars.fontFamily
                         font.pixelSize: 13
-                        font.weight: Font.Medium
+                        font.weight: itemMouseArea.containsMouse ? Font.DemiBold : Font.Medium
                         text: modelData.name
-                        color: Colors.textColor
+                        
+                        // Text switches to accent color on hover
+                        color: itemMouseArea.containsMouse ? Theme.on_primary_container : Theme.on_surface
+                        opacity: itemMouseArea.containsMouse ? 1.0 : 0.6
+                        
                         horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
                         maximumLineCount: 1
                         elide: Text.ElideRight
+                        
+                        Behavior on opacity { NumberAnimation { duration: 250 } }
                     }
                 }
             }

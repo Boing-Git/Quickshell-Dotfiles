@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell
 
-import "./Variables/colors.js" as Colors
 import "./Variables/variables.js" as Vars
 
 PanelWindow {
@@ -26,7 +25,7 @@ PanelWindow {
         anchors.fill: parent
         anchorPoint: Qt.point(0, 0)
         targetPoint: Qt.point(clockPillRoot.x, clockPillRoot.y + 15)
-        stringColor: Colors.secondary.base
+        stringColor: Theme.secondary
     }
 
     // String 2: Top-Right corner of screen to Right side of the Clock Pill
@@ -35,6 +34,6 @@ PanelWindow {
         anchors.fill: parent
         anchorPoint: Qt.point(Screens.width, 0)
         targetPoint: Qt.point(clockPillRoot.x + clockPillRoot.width, clockPillRoot.y + 15)
-        stringColor: Colors.secondary.base
+        stringColor: Theme.secondary
     }
 }

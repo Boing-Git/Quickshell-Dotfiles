@@ -55,6 +55,10 @@ ShellRoot {
             root.launcherVisible = false;
         }
     }
+    NotificationDaemon {
+        id: notifDaemon
+    }
+
     VolumeOsd {}
 
     TopPills{}

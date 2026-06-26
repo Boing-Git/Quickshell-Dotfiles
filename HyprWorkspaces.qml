@@ -2,13 +2,11 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
-import "./Variables/colors.js" as Colors
 import "./Variables/variables.js" as Vars
 
-// Left Side: Hyprland Workspaces Pill
 Rectangle {
     id: mainContainer
-    color: Colors.primary.base
+    color: Theme.primary
     radius: Math.min(width, height) * Vars.radiusAmount
 
     width: workspaceLayout.implicitWidth + 24
@@ -17,36 +15,41 @@ Rectangle {
     RowLayout {
         id: workspaceLayout
         anchors.centerIn: parent
-        spacing: 8
+        spacing: 4 // Tighter spacing makes the ghost elements look cohesive
 
         Repeater {
             model: 5
 
             delegate: Rectangle {
                 id: wsItem
-
                 readonly property int wsId: modelData
                 property bool isFocused: Hyprland.focusedWorkspace?.id === (wsId + 1)
 
                 radius: Math.min(width, height) * Vars.radiusAmount 
-                implicitWidth: 29
-                implicitHeight: 29
+                implicitWidth: 32
+                implicitHeight: 32
 
-                color: isFocused ? Colors.tertiary.on_base : Colors.primary.container
+                // Blanket Style: Accent background when active, totally transparent when inactive
+                color: isFocused ? Theme.primary_container : "transparent"
 
                 Behavior on color {
-                    ColorAnimation {
-                        duration: 400
-                    }
+                    ColorAnimation { duration: 300; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
                 }
 
                 Text {
-                    font.family: "Rubik"
-                    font.pixelSize: 13
-                    font.weight: 500
+                    font.family: Vars.fontFamily
+                    font.pixelSize: 14
+                    font.weight: isFocused ? 600 : 500
                     anchors.centerIn: parent
                     text: wsId + 1
-                    color: isFocused ? Colors.secondary.base : Colors.primary.on_container
+                    
+                    // Blanket Style: Full opacity accent text when active, faded base text when inactive
+                    color: isFocused ? Theme.on_primary_container : Theme.on_primary
+                    opacity: isFocused ? 1.0 : 0.5
+                    
+                    Behavior on opacity {
+                        NumberAnimation { duration: 300 }
+                    }
                 }
 
                 MouseArea {

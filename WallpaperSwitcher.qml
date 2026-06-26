@@ -5,8 +5,8 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-// Import your generated colors library
-import "./Variables/colors.js" as Colors
+// Import your generated colors & variables libraries
+import "./Variables/variables.js" as Vars
 
 PanelWindow {
     id: switcherRoot
@@ -43,23 +43,27 @@ PanelWindow {
     Rectangle {
         id: switcherRect
         anchors.fill: parent
-        color: Colors.surface.base
-        radius: 32
+
+        // Matched template colors & dynamic radius
+        color: Theme.primary
+        radius: Math.min(width, height) * Vars.radiusAmount - 50
+
         opacity: visibleState ? 1.0 : 0.0
         scale: visibleState ? 1.0 : 0.95
 
+        // Matched template animations
         Behavior on opacity {
             NumberAnimation {
-                duration: 300
+                duration: 1000
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: [0, 0, 0.05, 0.7, 0.1, 1.0, 1, 1]
+                easing.bezierCurve: Vars.m3Expressive
             }
         }
         Behavior on scale {
             NumberAnimation {
-                duration: 300
+                duration: 1000
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: [0, 0, 0.05, 0.7, 0.1, 1.0, 1, 1]
+                easing.bezierCurve: Vars.m3Expressive
             }
         }
 
@@ -80,16 +84,17 @@ PanelWindow {
                     spacing: 4
                     Text {
                         text: "Wallpaper Engine Hub"
-                        font.family: "Rubik"
+                        font.family: Vars.fontFamily
                         font.pixelSize: 22
                         font.bold: true
-                        color: Colors.surface.on_base
+                        color: Theme.on_primary // Matched template
                     }
                     Text {
                         text: switcherRoot.currentWallpaper ? "Active: " + switcherRoot.currentWallpaper.substring(switcherRoot.currentWallpaper.lastIndexOf('/') + 1) : "Select a wallpaper to shift system palettes"
-                        font.family: "Rubik"
+                        font.family: Vars.fontFamily
                         font.pixelSize: 12
-                        color: Colors.surface.on_variant
+                        color: Theme.on_primary
+                        opacity: 0.8 // Slightly faded for visual hierarchy
                         elide: Text.ElideMiddle
                         Layout.maximumWidth: 320
                     }
@@ -99,10 +104,10 @@ PanelWindow {
                     id: searchBox
                     Layout.fillWidth: true
                     Layout.preferredHeight: 44
-                    color: Colors.surface.container
-                    border.color: searchInput.activeFocus ? Colors.primary.base : Colors.outline.variant
-                    border.width: 1
-                    radius: 22
+                    color: "transparent"
+                    border.color: Theme.on_primary
+                    border.width: searchInput.activeFocus ? 2 : 1
+                    radius: Math.min(width, height) * Vars.radiusAmount // Adopted variable radius
 
                     RowLayout {
                         anchors.fill: parent
@@ -112,17 +117,18 @@ PanelWindow {
                         TextInput {
                             id: searchInput
                             Layout.fillWidth: true
-                            font.family: "Rubik"
+                            font.family: Vars.fontFamily
                             font.pixelSize: 14
-                            color: Colors.surface.on_base
+                            color: Theme.on_primary
                             focus: true
                             selectByMouse: true
 
                             Text {
                                 text: "Search wallpapers..."
-                                font.family: "Rubik"
+                                font.family: Vars.fontFamily
                                 font.pixelSize: 14
-                                color: Colors.surface.on_variant
+                                color: Theme.on_primary
+                                opacity: 0.6
                                 visible: !searchInput.text && !searchInput.activeFocus
                             }
 
@@ -133,7 +139,7 @@ PanelWindow {
                         Text {
                             text: "✕"
                             font.pixelSize: 14
-                            color: Colors.surface.on_variant
+                            color: Theme.on_primary
                             visible: searchInput.text.length > 0
                             Layout.alignment: Qt.AlignVCenter
                             MouseArea {
@@ -153,15 +159,15 @@ PanelWindow {
                     }
 
                     background: Rectangle {
-                        color: refreshBtn.down ? Colors.surface.variant : (refreshBtn.hovered ? Colors.surface.container_highest : Colors.surface.container_high)
-                        border.color: Colors.outline.variant
+                        color: refreshBtn.down ? Theme.on_primary : (refreshBtn.hovered ? Theme.primary_container : "transparent")
+                        border.color: Theme.on_primary
                         border.width: 1
-                        radius: 100
+                        radius: Math.min(width, height) * Vars.radiusAmount
                     }
                     contentItem: Text {
                         text: refreshBtn.text
-                        font.family: "Rubik"
-                        color: Colors.primary.base
+                        font.family: Vars.fontFamily
+                        color: (refreshBtn.down || refreshBtn.hovered) ? Theme.primary : Theme.on_primary
                         font.bold: true
                         font.pixelSize: 14
                         horizontalAlignment: Text.AlignHCenter
@@ -186,30 +192,25 @@ PanelWindow {
                 keyNavigationEnabled: true
                 highlightFollowsCurrentItem: true
 
-                // Vertical wheel → horizontal item-by-item scroll using MouseArea
+                highlightRangeMode: ListView.ApplyRange
+                preferredHighlightBegin: 20
+                preferredHighlightEnd: listView.width - 20
+                highlightMoveDuration: 150
+
                 MouseArea {
                     anchors.fill: parent
-
-                    // CRITICAL: Tells the MouseArea to ignore clicks so they pass through to your wallpaper tiles!
                     acceptedButtons: Qt.NoButton
                     hoverEnabled: true
 
                     onWheel: wheel => {
-                        var total = listView.count; // Use the ListView's built-in item count
+                        var delta = wheel.pixelDelta.y !== 0 ? wheel.pixelDelta.y : (wheel.angleDelta.y / 120) * 80;
+                        var newX = listView.contentX - delta;
 
-                        if (wheel.angleDelta.y < 0) {
-                            // Scroll Right (Next item): add one if not at the end
-                            if (listView.currentIndex < total - 1) {
-                                listView.currentIndex++;
-                            }
-                        } else if (wheel.angleDelta.y > 0) {
-                            // Scroll Left (Previous item): remove one if not at the start
-                            if (listView.currentIndex > 0) {
-                                listView.currentIndex--;
-                            }
-                        }
+                        var maxContentX = Math.max(0, listView.contentWidth - listView.width);
+                        listView.contentX = Math.max(0, Math.min(newX, maxContentX));
                     }
                 }
+
                 Keys.onReturnPressed: if (currentItem)
                     currentItem.triggerSelection()
                 Keys.onSpacePressed: if (currentItem)
@@ -227,10 +228,12 @@ PanelWindow {
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 8
-                        radius: 16
-                        color: switcherRoot.currentWallpaper === filePath ? Colors.secondary.container : ((tileMouseArea.containsMouse || delegateItem.ListView.isCurrentItem && listView.activeFocus) ? Colors.surface.container_highest : Colors.surface.container)
+                        radius: Math.min(width, height) * (Vars.radiusAmount / 3) // Half-radius for inner elements to look proportional
 
-                        border.color: (switcherRoot.currentWallpaper === filePath || (delegateItem.ListView.isCurrentItem && listView.activeFocus)) ? Colors.primary.base : Colors.outline.variant
+                        // Adaptive primary colors
+                        color: switcherRoot.currentWallpaper === filePath ? Theme.on_primary : ((tileMouseArea.containsMouse || delegateItem.ListView.isCurrentItem && listView.activeFocus) ? Theme.primary_container : "transparent")
+
+                        border.color: Theme.on_primary
                         border.width: (switcherRoot.currentWallpaper === filePath || (delegateItem.ListView.isCurrentItem && listView.activeFocus)) ? 2 : 1
                         clip: true
 
@@ -274,13 +277,13 @@ PanelWindow {
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    color: Colors.surface.container_highest
+                                    color: Theme.primary_container
                                     visible: mediaLoader.status !== Loader.Ready || (mediaLoader.item && mediaLoader.item.status !== Image.Ready)
                                     Text {
                                         anchors.centerIn: parent
                                         text: "Loading..."
-                                        font.family: "Rubik"
-                                        color: Colors.surface.on_variant
+                                        font.family: Vars.fontFamily
+                                        color: Theme.on_primary_container
                                         font.pixelSize: 11
                                     }
                                 }
@@ -292,15 +295,15 @@ PanelWindow {
                                     width: 32
                                     height: 18
                                     radius: 4
-                                    color: Colors.surface.variant
+                                    color: Theme.primary
                                     visible: filePath.toLowerCase().endsWith(".gif")
                                     Text {
                                         anchors.centerIn: parent
                                         text: "GIF"
-                                        font.family: "Rubik"
+                                        font.family: Vars.fontFamily
                                         font.bold: true
                                         font.pixelSize: 10
-                                        color: Colors.surface.on_variant
+                                        color: Theme.on_primary
                                     }
                                 }
                             }
@@ -308,8 +311,9 @@ PanelWindow {
                             Text {
                                 Layout.fillWidth: true
                                 text: fileName
-                                font.family: "Rubik"
-                                color: switcherRoot.currentWallpaper === filePath ? Colors.primary.base : Colors.surface.on_base
+                                font.family: Vars.fontFamily
+                                // Invert text color if tile is selected (since background becomes on_base)
+                                color: switcherRoot.currentWallpaper === filePath ? Theme.primary : Theme.on_primary
                                 font.pixelSize: 12
                                 font.weight: switcherRoot.currentWallpaper === filePath ? Font.Bold : Font.Normal
                                 elide: Text.ElideRight
@@ -338,18 +342,11 @@ PanelWindow {
         console.log("[USER ACTION] Wallpaper selected: " + filePath);
         switcherRoot.currentWallpaper = filePath;
 
-        // Dynamically update system colors based on the new image
-        Quickshell.execDetached({
-            command: ['bash', '-c', `matugen image "${filePath}" --source-color-index 0`]
-        });
+        matugenProc.command = ["matugen", "image", filePath, "-m", "light", "--source-color-index", "0"];
+        matugenProc.running = true;
 
-        // Dynamically update system colors based on the new image
-        Quickshell.execDetached({
-            command: ['bash', '-c', `qs  kill; sleep .1; qs`]
-        })
     }
 
-    // --- Matugen Process ---
     Process {
         id: matugenProc
 
@@ -368,11 +365,18 @@ PanelWindow {
         }
 
         onExited: (code, status) => {
-            console.log("[MATUGEN] Exited: " + code + " | Reload Quickshell to apply new palette.");
+            console.log("[MATUGEN] Exited: " + code + " | Reloading Quickshell to apply new palette.");
+
+            Quickshell.execDetached({
+                command: ['bash', '-c', '.config/quickshell/sync_colors.py']
+            });
+
+            Quickshell.execDetached({
+                command: ['bash', '-c', 'qs kill; sleep 0.1; qs']
+            });
         }
     }
 
-    // --- File IO Engine ---
     ListModel {
         id: wallpaperModel
     }
