@@ -53,10 +53,10 @@ PanelWindow {
 
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            anchors.topMargin: 8
-            anchors.bottomMargin: 8
+            anchors.leftMargin: Vars.spacingSmall
+            anchors.rightMargin: Vars.spacingSmall
+            anchors.topMargin: Vars.spacingSmall
+            anchors.bottomMargin: Vars.spacingSmall
 
             HyprWorkspaces {
                 Layout.alignment: Qt.AlignTop

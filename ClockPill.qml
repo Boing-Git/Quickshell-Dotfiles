@@ -31,8 +31,15 @@ Item {
         width: parent.width
         height: parent.height
         color: Theme.primary
-        radius: Math.min(width, height) * Vars.radiusAmount
+        radius: height / 2
         z: 1
+
+        Rectangle {
+            anchors.fill: parent
+            radius: height / 2
+            color: dragArea.pressed ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : (dragArea.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent")
+            Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
+        }
 
         transform: Translate {
             id: pillTranslate

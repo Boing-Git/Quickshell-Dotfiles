@@ -35,10 +35,10 @@ Item {
         // Drag logic transforms the container X
         x: 0
         
-        radius: 16 // Material 3 expressive rounded corners
-        color: Theme.surface
+        radius: Vars.radiusMedium // Material 3 expressive rounded corners
+        color: Theme.primary
         border.color: modelData.urgency === NotificationUrgency.Critical ? Theme.error :
-                      modelData.urgency === NotificationUrgency.Low      ? Theme.primary_container : Theme.surface_variant
+                      modelData.urgency === NotificationUrgency.Low      ? Theme.primary_container : Theme.primary_container
         border.width: 1
         clip: true
 
@@ -62,17 +62,22 @@ Item {
             if (isPopup) {
                 opacity = 0;
                 Qt.callLater(() => { opacity = 1.0; });
+                Vars.pushNotification(rootCard.modelData);
             }
         }
 
         Accessible.role: Accessible.StaticText
         Accessible.name: (modelData.urgency === NotificationUrgency.Critical ? "[Critical] " :
                          modelData.urgency === NotificationUrgency.Low       ? "[Low] "      : "") +
-                         (modelData.appName || "Notification") + ": " + modelData.summary
+                         (modelData.appName || "Notification") + ": " + (modelData.summary || "")
 
         HoverHandler {
             id: cardHover
-            onHoveredChanged: modelData.hovered = hovered
+            onHoveredChanged: {
+                if (modelData.hovered !== undefined) {
+                    modelData.hovered = hovered
+                }
+            }
         }
 
         // Drag handling
@@ -101,12 +106,11 @@ Item {
             }
             cursorShape: Qt.PointingHandCursor
             
-            // Just clicking without dragging dismisses too? No, usually a click on background is default action
             onClicked: (mouse) => {
                 if (Math.abs(container.x) < 5) {
-                    // Normal click action
-                    // if it has default action we might invoke it, otherwise dismiss
-                    modelData.dismiss();
+                    if (typeof modelData.dismiss === "function") {
+                        modelData.dismiss();
+                    }
                 }
             }
         }
@@ -114,33 +118,42 @@ Item {
         Timer {
             id: dismissTimer
             interval: 250
-            onTriggered: modelData.dismiss()
+            onTriggered: {
+                if (isPopup) {
+                    rootCard.visible = false;
+                    rootCard.height = 0;
+                } else {
+                    if (typeof modelData.dismiss === "function") {
+                        modelData.dismiss();
+                    }
+                }
+            }
         }
 
         Rectangle {
             width: 4
             height: parent.height - 16
-            radius: 2
+            radius: Math.floor(Vars.radiusSmall / 4)
             anchors.left: parent.left
-            anchors.leftMargin: 6
+            anchors.leftMargin: Vars.spacingSmall
             anchors.verticalCenter: parent.verticalCenter
             color: modelData.urgency === NotificationUrgency.Critical ? Theme.error :
-                   modelData.urgency === NotificationUrgency.Low      ? Theme.primary_container : Theme.primary
+                   modelData.urgency === NotificationUrgency.Low      ? Theme.primary_container : Theme.on_primary
         }
 
         ColumnLayout {
             id: cardContent
             anchors.fill: parent
-            anchors.leftMargin: 18
-            anchors.rightMargin: 12
-            anchors.topMargin: 12
-            anchors.bottomMargin: 12
-            spacing: 8
+            anchors.leftMargin: Vars.spacingMedium
+            anchors.rightMargin: Vars.spacingMedium
+            anchors.topMargin: Vars.spacingMedium
+            anchors.bottomMargin: Vars.spacingMedium
+            spacing: Vars.spacingSmall
 
             // Header row
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Vars.spacingSmall
 
                 Item {
                     Layout.preferredWidth: 18
@@ -149,14 +162,14 @@ Item {
 
                     IconImage {
                         anchors.centerIn: parent
-                        source: Quickshell.iconPath(modelData.appIcon, true)
+                        source: Quickshell.iconPath(modelData.appIcon || "", true)
                         implicitSize: 18
-                        visible: modelData.appIcon !== ""
+                        visible: modelData.appIcon !== "" && modelData.appIcon !== undefined
                     }
 
                     Text {
                         anchors.centerIn: parent
-                        visible: modelData.appIcon === ""
+                        visible: modelData.appIcon === "" || modelData.appIcon === undefined
                         text: {
                             const name = (modelData.appName || "").toLowerCase();
                             if (modelData.urgency === NotificationUrgency.Critical) return "";
@@ -169,15 +182,15 @@ Item {
                             return "\ue7f4"; // Default material notification icon
                         }
                         color: modelData.urgency === NotificationUrgency.Critical
-                               ? Theme.error : Theme.primary
+                               ? Theme.error : Theme.on_primary
                         font.pixelSize: 16
-                        font.family: modelData.appIcon === "" && text === "\ue7f4" ? "Material Symbols Outlined" : rootCard.fontName
+                        font.family: (modelData.appIcon === "" || modelData.appIcon === undefined) && text === "\ue7f4" ? "Material Symbols Outlined" : rootCard.fontName
                     }
                 }
 
                 Text {
                     text: modelData.appName || "Notification"
-                    color: Theme.on_surface_variant
+                    color: Theme.on_primary_container
                     font.pixelSize: 12
                     font.family: rootCard.fontName
                     Layout.alignment: Qt.AlignVCenter
@@ -185,20 +198,19 @@ Item {
 
                 Item { Layout.fillWidth: true }
                 
-                // Timestamp could go here (if supported), or just standard close button
                 Rectangle {
                     width: 24
                     height: 24
-                    radius: 12
-                    color: closeHover.containsMouse ? Theme.surface_variant : "transparent"
+                    radius: Math.floor(Vars.radiusMedium * 0.75)
+                    color: closeHover.pressed ? Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.12) : (closeHover.containsMouse ? Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.08) : "transparent")
                     Layout.alignment: Qt.AlignVCenter
                     
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
 
                     Text {
                         anchors.centerIn: parent
                         text: "\ue5cd"
-                        color: closeHover.containsMouse ? Theme.error : Theme.on_surface_variant
+                        color: closeHover.containsMouse ? Theme.error : Theme.on_primary_container
                         font.pixelSize: 16
                         font.family: "Material Symbols Outlined"
                     }
@@ -218,8 +230,8 @@ Item {
 
             // Summary (Title)
             Text {
-                text: modelData.summary
-                color: Theme.on_surface
+                text: modelData.summary || ""
+                color: Theme.on_primary
                 font.pixelSize: 15
                 font.family: rootCard.fontName
                 font.weight: 700
@@ -231,12 +243,12 @@ Item {
             // Body and Image
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
-                visible: modelData.body !== "" || modelData.image !== ""
+                spacing: Vars.spacingSmall
+                visible: (modelData.body !== "" && modelData.body !== undefined) || (modelData.image !== "" && modelData.image !== undefined)
 
                 Text {
-                    text: modelData.body
-                    color: Theme.on_surface_variant
+                    text: modelData.body || ""
+                    color: Theme.on_primary_container
                     font.pixelSize: 14
                     font.family: rootCard.fontName
                     wrapMode: Text.Wrap
@@ -250,14 +262,14 @@ Item {
                 Rectangle {
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 40
-                    radius: 8
-                    color: Theme.surface_variant
+                    radius: Vars.radiusSmall
+                    color: Theme.primary_container
                     clip: true
-                    visible: modelData.image !== ""
+                    visible: modelData.image !== "" && modelData.image !== undefined
 
                     Image {
                         anchors.fill: parent
-                        source: modelData.image
+                        source: modelData.image || ""
                         fillMode: Image.PreserveAspectCrop
                         sourceSize.width: 40
                         sourceSize.height: 40
@@ -268,8 +280,8 @@ Item {
             // Actions
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
-                visible: modelData.actions && modelData.actions.length > 0
+                spacing: Vars.spacingSmall
+                visible: modelData.actions !== undefined && modelData.actions.length > 0
 
                 Repeater {
                     model: modelData.actions || []
@@ -280,18 +292,18 @@ Item {
 
                         Layout.preferredHeight: 32
                         Layout.preferredWidth: actionText.width + 24
-                        radius: 8
-                        color: actionHover.containsMouse ? Theme.surface_variant : Theme.surface_container
+                        radius: Vars.radiusSmall
+                        color: actionHover.pressed ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.2) : (actionHover.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.16) : Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.1))
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation { duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
                         }
 
                         Text {
                             id: actionText
                             anchors.centerIn: parent
                             text: actionBtn.modelData.text || ""
-                            color: Theme.primary
+                            color: Theme.on_primary
                             font.pixelSize: 13
                             font.family: rootCard.fontName
                             font.weight: 600
@@ -302,7 +314,11 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: rootCard.modelData.invokeAction(actionBtn.modelData.identifier)
+                            onClicked: {
+                                if (typeof rootCard.modelData.invokeAction === "function") {
+                                    rootCard.modelData.invokeAction(actionBtn.modelData.identifier);
+                                }
+                            }
                         }
                     }
                 }
@@ -312,18 +328,18 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 height: 3
-                radius: 1.5
-                color: Theme.surface_container
-                Layout.topMargin: 4
+                radius: Math.floor(Vars.radiusSmall / 5)
+                color: Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.2)
+                Layout.topMargin: (Vars.spacingSmall / 2)
                 visible: rootCard.modelData.urgency !== NotificationUrgency.Critical && isPopup
 
                 Rectangle {
                     id: progressBar
                     height: parent.height
                     width: parent.width
-                    radius: 1.5
+                    radius: Math.floor(Vars.radiusSmall / 5)
                     color: rootCard.modelData.urgency === NotificationUrgency.Critical
-                           ? Theme.error : Theme.primary
+                           ? Theme.error : Theme.on_primary
                     opacity: 0.8
 
                     SequentialAnimation {
@@ -335,7 +351,13 @@ Item {
                             to: 0
                             duration: rootCard.modelData.expireTimeout > 0
                                       ? rootCard.modelData.expireTimeout
-                                      : rootCard.modelData.defaultTimeout
+                                      : (rootCard.modelData.defaultTimeout || 5000)
+                        }
+                        onFinished: {
+                            if (isPopup) {
+                                rootCard.dismissing = true;
+                                dismissTimer.start();
+                            }
                         }
                     }
                 }

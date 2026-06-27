@@ -46,7 +46,7 @@ PanelWindow {
 
         // Matched template colors & dynamic radius
         color: Theme.primary
-        radius: Math.min(width, height) * Vars.radiusAmount - 50
+        radius: Vars.radiusExtraLarge
 
         opacity: visibleState ? 1.0 : 0.0
         scale: visibleState ? 1.0 : 0.95
@@ -73,12 +73,12 @@ PanelWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 24
-            spacing: 16
+            anchors.margins: Vars.spacingLarge
+            spacing: Vars.spacingMedium
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 16
+                spacing: Vars.spacingMedium
 
                 ColumnLayout {
                     spacing: 4
@@ -104,15 +104,15 @@ PanelWindow {
                     id: searchBox
                     Layout.fillWidth: true
                     Layout.preferredHeight: 44
-                    color: "transparent"
-                    border.color: Theme.on_primary
-                    border.width: searchInput.activeFocus ? 2 : 1
-                    radius: Math.min(width, height) * Vars.radiusAmount // Adopted variable radius
+                    color: searchInput.activeFocus ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08)
+                    border.color: searchInput.activeFocus ? Theme.primary_container : "transparent"
+                    border.width: searchInput.activeFocus ? 2 : 0
+                    radius: Vars.radiusMedium
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 16
-                        anchors.rightMargin: 16
+                        anchors.leftMargin: Vars.spacingMedium
+                        anchors.rightMargin: Vars.spacingMedium
 
                         TextInput {
                             id: searchInput
@@ -159,10 +159,10 @@ PanelWindow {
                     }
 
                     background: Rectangle {
-                        color: refreshBtn.down ? Theme.on_primary : (refreshBtn.hovered ? Theme.primary_container : "transparent")
+                        color: refreshBtn.down ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : (refreshBtn.hovered ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent")
                         border.color: Theme.on_primary
                         border.width: 1
-                        radius: Math.min(width, height) * Vars.radiusAmount
+                        radius: Vars.radiusMedium
                     }
                     contentItem: Text {
                         text: refreshBtn.text
@@ -182,7 +182,7 @@ PanelWindow {
                 Layout.fillHeight: true
                 clip: true
                 orientation: ListView.Horizontal
-                spacing: 12
+                spacing: Vars.spacingMedium
                 cacheBuffer: 600
                 model: sortFilterProxyModel.proxyModel
                 snapMode: ListView.SnapToItem
@@ -225,22 +225,26 @@ PanelWindow {
                         executeWallpaperChange(filePath);
                     }
 
+                    property bool isCurrentFocus: delegateItem.ListView.isCurrentItem && listView.activeFocus
+                    
                     Rectangle {
                         anchors.fill: parent
-                        anchors.margins: 8
-                        radius: Math.min(width, height) * (Vars.radiusAmount / 3) // Half-radius for inner elements to look proportional
+                        anchors.margins: Vars.spacingSmall
+                        radius: Vars.radiusMedium
 
                         // Adaptive primary colors
-                        color: switcherRoot.currentWallpaper === filePath ? Theme.on_primary : ((tileMouseArea.containsMouse || delegateItem.ListView.isCurrentItem && listView.activeFocus) ? Theme.primary_container : "transparent")
+                        color: switcherRoot.currentWallpaper === filePath ? Theme.on_primary : (isCurrentFocus ? Theme.primary_container : (tileMouseArea.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent"))
 
                         border.color: Theme.on_primary
-                        border.width: (switcherRoot.currentWallpaper === filePath || (delegateItem.ListView.isCurrentItem && listView.activeFocus)) ? 2 : 1
+                        border.width: (switcherRoot.currentWallpaper === filePath || isCurrentFocus) ? 2 : 1
                         clip: true
+
+                        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
 
                         ColumnLayout {
                             anchors.fill: parent
-                            anchors.margins: 10
-                            spacing: 8
+                            anchors.margins: Vars.spacingSmall
+                            spacing: Vars.spacingSmall
 
                             Item {
                                 Layout.fillWidth: true
@@ -270,8 +274,8 @@ PanelWindow {
                                         source: "file://" + filePath
                                         fillMode: Image.PreserveAspectCrop
                                         asynchronous: true
-                                        playing: tileMouseArea.containsMouse || (delegateItem.ListView.isCurrentItem && listView.activeFocus)
-                                        paused: !tileMouseArea.containsMouse && !(delegateItem.ListView.isCurrentItem && listView.activeFocus)
+                                        playing: tileMouseArea.containsMouse || isCurrentFocus
+                                        paused: !tileMouseArea.containsMouse && !isCurrentFocus
                                     }
                                 }
 
@@ -294,7 +298,7 @@ PanelWindow {
                                     anchors.margins: 6
                                     width: 32
                                     height: 18
-                                    radius: 4
+                                    radius: Math.floor(Vars.radiusSmall / 2)
                                     color: Theme.primary
                                     visible: filePath.toLowerCase().endsWith(".gif")
                                     Text {
@@ -389,7 +393,7 @@ PanelWindow {
             proxyModel.clear();
             for (var i = 0; i < wallpaperModel.count; i++) {
                 var item = wallpaperModel.get(i);
-                if (filterText === "" || item.fileName.toLowerCase().indexOf(filterText.toLowerCase()) !== -1) {
+                if (Vars.fuzzyMatch(filterText, item.fileName)) {
                     proxyModel.append({
                         "filePath": item.filePath,
                         "fileName": item.fileName

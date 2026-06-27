@@ -47,7 +47,7 @@ Scope {
             }
             
             margins.top: 60 
-            margins.right: 20
+            margins.right: Vars.spacingLarge
 
             implicitWidth: 380
             implicitHeight: notifColumn.implicitHeight + 20
@@ -56,10 +56,10 @@ Scope {
                 id: notifColumn
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.topMargin: 10
-                anchors.rightMargin: 10
+                anchors.topMargin: Vars.spacingSmall
+                anchors.rightMargin: Vars.spacingSmall
                 width: 360
-                spacing: 8
+                spacing: Vars.spacingSmall
 
                 Repeater {
                     model: ScriptModel {

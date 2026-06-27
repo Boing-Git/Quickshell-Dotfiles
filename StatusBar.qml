@@ -9,19 +9,19 @@ import "./Variables/variables.js" as Vars
 Rectangle {
     id: systemTrayContainer
     color: Theme.primary
-    radius: Math.min(width, height) * Vars.radiusAmount
+    radius: height / 2
     
     // THE FIX: Only show this pill if there is actually an app in the tray!
     visible: SystemTray.items.length > 0
     
     // Auto-size based on the number of tray items
-    implicitWidth: trayLayout.implicitWidth + 24
+    implicitWidth: trayLayout.implicitWidth + Vars.spacingLarge
     implicitHeight: 40
 
     RowLayout {
         id: trayLayout
         anchors.centerIn: parent
-        spacing: 6
+        spacing: Vars.spacingSmall
 
         Repeater {
             model: SystemTray.items
@@ -32,8 +32,8 @@ Rectangle {
                 Layout.preferredHeight: 32
                 
                 // Blanket Style: Transparent normally, soft accent circle on hover
-                color: itemMouseArea.containsMouse ? Theme.primary_container : "transparent"
-                radius: Math.min(width, height) * Vars.radiusAmount
+                color: itemMouseArea.pressed ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : (itemMouseArea.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent")
+                radius: height / 2
 
                 Behavior on color {
                     ColorAnimation { duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }

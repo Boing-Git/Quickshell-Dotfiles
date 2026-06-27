@@ -19,6 +19,7 @@ Item {
     property bool expanded: false
     // Navigation state: "" (Main Dashboard), "wifi" (Wi-Fi Settings), "bluetooth" (Bluetooth Settings)
     property string currentSubMenu: ""
+    property var historyList: []
     
     // Expose the visual panel for mask tracking in TopPills
     property alias panel: panel
@@ -74,7 +75,7 @@ Item {
         height: root.expanded ? 660 : 40
         
         color: Theme.primary
-        radius: root.expanded ? Vars.radiusExtraLarge : Vars.radiusExtraLarge
+        radius: root.expanded ? Vars.radiusExtraLarge : height / 2
         clip: true
 
         Behavior on radius { SpringAnimation { spring: 2.0; damping: 0.8 } }
@@ -94,12 +95,19 @@ Item {
             visible: opacity > 0
             Behavior on opacity { NumberAnimation { duration: 200 } }
 
+            Rectangle {
+                anchors.fill: parent
+                radius: height / 2
+                color: ccMouseArea.pressed ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : (ccMouseArea.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent")
+                Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
+            }
+
         RowLayout {
             id: collapsedUI
             anchors.fill: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            spacing: 10 
+            anchors.leftMargin: Vars.spacingMedium
+            anchors.rightMargin: Vars.spacingMedium
+            spacing: Vars.spacingSmall 
 
             Text {
                 font.family: "Material Symbols Outlined"
@@ -133,12 +141,13 @@ Item {
                 text: wifiIcon
                 Layout.alignment: Qt.AlignVCenter
             }
-            
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.expanded = true
-            }
+        }
+        
+        MouseArea {
+            id: ccMouseArea
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.expanded = true
         }
     }
 
@@ -162,7 +171,7 @@ Item {
         Flickable {
             id: mainDashboardFlickable
             anchors.fill: parent
-            anchors.margins: 20
+            anchors.margins: Vars.spacingLarge
             contentHeight: mainDashboardView.implicitHeight
             visible: root.currentSubMenu === ""
             clip: true
@@ -174,18 +183,19 @@ Item {
                 id: mainDashboardView
                 anchors.left: parent.left
                 anchors.right: parent.right
-                spacing: 14
+                spacing: Vars.spacingMedium
 
             // Header Row
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 12
+                spacing: Vars.spacingMedium
                 
                 Rectangle {
                     width: 40; height: 40; radius: Vars.radiusMedium
-                    color: Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08)
+                    color: backHover.pressed ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : (backHover.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent")
                     Text { anchors.centerIn: parent; font.family: "Material Symbols Outlined"; font.pixelSize: 20; color: Theme.on_primary; text: "\ue5c4" }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.expanded = false }
+                    MouseArea { id: backHover; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.expanded = false }
+                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
                 }
                 Text { text: "Control Center"; font.family: Vars.fontFamily; font.pixelSize: 20; font.weight: 600; color: Theme.on_primary }
             }
@@ -210,7 +220,7 @@ Item {
                     }
 
                     RowLayout {
-                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 10; spacing: 8
+                        anchors.fill: parent; anchors.leftMargin: Vars.spacingSmall; anchors.rightMargin: Vars.spacingSmall; spacing: Vars.spacingSmall
                         
                         // Action 1: Toggle Button
                         Rectangle {
@@ -243,7 +253,7 @@ Item {
                     color: Theme.primary_container
                     
                     RowLayout {
-                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 10; spacing: 8
+                        anchors.fill: parent; anchors.leftMargin: Vars.spacingSmall; anchors.rightMargin: Vars.spacingSmall; spacing: Vars.spacingSmall
                         
                         Rectangle {
                             width: 40; height: 40; radius: Vars.radiusMedium; color: "transparent"
@@ -272,7 +282,7 @@ Item {
                     }
 
                     RowLayout {
-                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 10; spacing: 8
+                        anchors.fill: parent; anchors.leftMargin: Vars.spacingSmall; anchors.rightMargin: Vars.spacingSmall; spacing: Vars.spacingSmall
                         
                         // Action 1: Toggle Button
                         Rectangle {
@@ -307,7 +317,7 @@ Item {
                     }
 
                     RowLayout {
-                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 10; spacing: 8
+                        anchors.fill: parent; anchors.leftMargin: Vars.spacingSmall; anchors.rightMargin: Vars.spacingSmall; spacing: Vars.spacingSmall
                         Rectangle {
                             width: 40; height: 40; radius: Vars.radiusMedium; color: "transparent"
                             Text { anchors.centerIn: parent; font.family: "Material Symbols Outlined"; text: "\ue30d"; font.pixelSize: 22; color: root.currentSubMenu === "display" ? Theme.on_primary_container : Theme.on_primary }
@@ -327,7 +337,7 @@ Item {
                     radius: Vars.radiusMedium
                     color: Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.06)
                     RowLayout {
-                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 10; spacing: 8
+                        anchors.fill: parent; anchors.leftMargin: Vars.spacingSmall; anchors.rightMargin: Vars.spacingSmall; spacing: Vars.spacingSmall
                         Rectangle {
                             width: 40; height: 40; radius: Vars.radiusMedium; color: "transparent"
                             Text { anchors.centerIn: parent; font.family: "Material Symbols Outlined"; text: "\ue15c"; font.pixelSize: 22; color: Theme.on_primary }
@@ -347,7 +357,7 @@ Item {
                     radius: Vars.radiusMedium
                     color: Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.06)
                     RowLayout {
-                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 10; spacing: 8
+                        anchors.fill: parent; anchors.leftMargin: Vars.spacingSmall; anchors.rightMargin: Vars.spacingSmall; spacing: Vars.spacingSmall
                         Rectangle {
                             width: 40; height: 40; radius: Vars.radiusMedium; color: "transparent"
                             Text { anchors.centerIn: parent; font.family: "Material Symbols Outlined"; text: "\ue51c"; font.pixelSize: 22; color: Theme.on_primary }
@@ -363,7 +373,7 @@ Item {
 
             // Sliders Section
             ColumnLayout {
-                Layout.fillWidth: true; spacing: 14
+                Layout.fillWidth: true; spacing: Vars.spacingMedium
                 
                 // Volume Row
                 Rectangle {
@@ -378,7 +388,7 @@ Item {
                         height: parent.height; radius: Vars.radiusMedium; color: Theme.primary_container
                     }
 
-                    Text { anchors.left: parent.left; anchors.leftMargin: 18; anchors.verticalCenter: parent.verticalCenter; font.family: "Material Symbols Outlined"; font.pixelSize: 20; color: Theme.on_primary_container; text: audioNode && audioNode.audio.muted ? "\ue04f" : "\ue050" }
+                    Text { anchors.left: parent.left; anchors.leftMargin: Vars.spacingMedium; anchors.verticalCenter: parent.verticalCenter; font.family: "Material Symbols Outlined"; font.pixelSize: 20; color: Theme.on_primary_container; text: audioNode && audioNode.audio.muted ? "\ue04f" : "\ue050" }
                     MouseArea {
                         anchors.fill: parent
                         onPositionChanged: (mouse) => { if(audioNode) audioNode.audio.volume = Math.max(0, Math.min(1, mouse.x / width)) }
@@ -397,7 +407,7 @@ Item {
                         width: parent.width * 0.35 // Simulated brightness
                         height: parent.height; radius: Vars.radiusMedium; color: Theme.primary_container 
                     }
-                    Text { anchors.left: parent.left; anchors.leftMargin: 18; anchors.verticalCenter: parent.verticalCenter; font.family: "Material Symbols Outlined"; font.pixelSize: 20; color: Theme.on_primary_container; text: "\ue518" }
+                    Text { anchors.left: parent.left; anchors.leftMargin: Vars.spacingMedium; anchors.verticalCenter: parent.verticalCenter; font.family: "Material Symbols Outlined"; font.pixelSize: 20; color: Theme.on_primary_container; text: "\ue518" }
                 }
             }
 
@@ -505,14 +515,14 @@ Item {
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 20
-                    spacing: 8
+                    anchors.margins: Vars.spacingLarge
+                    spacing: Vars.spacingSmall
                     
                     // Metadata and Controls row
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        spacing: 16
+                        spacing: Vars.spacingMedium
                         
                         // Text Column
                         ColumnLayout {
@@ -555,7 +565,7 @@ Item {
                         
                         // Playback Controls
                         RowLayout {
-                            spacing: 8
+                            spacing: Vars.spacingSmall
                             Layout.alignment: Qt.AlignVCenter
                             
                             // Shuffle
@@ -646,7 +656,7 @@ Item {
                     // Seek Bar and Timestamps
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 12
+                        spacing: Vars.spacingMedium
                         
                         // Current time
                         Text {
@@ -661,14 +671,14 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 6
-                            radius: 3
+                            radius: Math.floor(Vars.radiusSmall / 2.5)
                             color: mprisPlayer && mprisPlayer.trackArtUrl ? Qt.rgba(1,1,1,0.2) : Qt.rgba(Theme.on_primary_container.r, Theme.on_primary_container.g, Theme.on_primary_container.b, 0.2)
                             
                             Rectangle { 
                                 width: parent.width * (mprisPlayer && mprisPlayer.length > 0 && mprisPlayer.position !== undefined ? (mprisPlayer.position / mprisPlayer.length) : 0)
                                 height: parent.height
                                 color: mprisPlayer && mprisPlayer.trackArtUrl ? "white" : Theme.primary
-                                radius: 3
+                                radius: Math.floor(Vars.radiusSmall / 2.5)
                             }
 
                             MouseArea {
@@ -710,16 +720,17 @@ Item {
             // ==========================================
             RowLayout {
                 Layout.fillWidth: true
-                Layout.topMargin: 10
-                spacing: 8
+                Layout.topMargin: Vars.spacingSmall
+                spacing: Vars.spacingSmall
                 
                 Text { text: "Notifications"; font.family: Vars.fontFamily; font.pixelSize: 18; font.weight: 600; color: Theme.on_primary; Layout.fillWidth: true }
                 
                 // Clear all button
                 Rectangle {
-                    width: 32; height: 32; radius: 16
-                    color: clearHover.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.1) : "transparent"
-                    visible: NotificationService.notifications.length > 0
+                    width: 32; height: 32; radius: Vars.radiusMedium
+                    color: clearHover.pressed ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : (clearHover.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent")
+                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
+                    visible: root.historyList.length > 0
                     
                     Text { anchors.centerIn: parent; font.family: "Material Symbols Outlined"; font.pixelSize: 20; color: Theme.on_primary; text: "\ue15b" }
                     
@@ -728,7 +739,7 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: NotificationService.dismissAll()
+                        onClicked: Vars.clearNotifications()
                     }
                 }
             }
@@ -736,17 +747,27 @@ Item {
             Text {
                 text: "No new notifications"
                 font.family: Vars.fontFamily; font.pixelSize: 14; color: Theme.on_surface_variant
-                visible: NotificationService.notifications.length === 0
+                visible: root.historyList.length === 0
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 20
-                Layout.bottomMargin: 20
+                Layout.topMargin: Vars.spacingLarge
+                Layout.bottomMargin: Vars.spacingLarge
+            }
+
+            Timer {
+                interval: 200
+                running: true
+                repeat: true
+                property int lastSync: -1
+                onTriggered: {
+                    if (lastSync !== Vars.historyUpdated) {
+                        lastSync = Vars.historyUpdated;
+                        root.historyList = Vars.notificationHistory.slice();
+                    }
+                }
             }
 
             Repeater {
-                model: ScriptModel {
-                    values: NotificationService.notifications
-                    objectProp: "seqId"
-                }
+                model: root.historyList
 
                 NotificationCard {
                     isPopup: false
@@ -762,20 +783,21 @@ Item {
         ColumnLayout {
             id: wifiSubMenuView
             anchors.fill: parent
-            anchors.margins: 20
-            spacing: 16
+            anchors.margins: Vars.spacingLarge
+            spacing: Vars.spacingMedium
             visible: root.currentSubMenu === "wifi"
 
             // Header matching the UI screenshot
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 16
+                spacing: Vars.spacingMedium
                 
                 Rectangle {
                     width: 40; height: 40; radius: Vars.radiusMedium
-                    color: Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08)
+                    color: backHoverWifi.pressed ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : (backHoverWifi.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent")
                     Text { anchors.centerIn: parent; font.family: "Material Symbols Outlined"; font.pixelSize: 20; color: Theme.on_primary; text: "\ue5c4" }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.currentSubMenu = "" }
+                    MouseArea { id: backHoverWifi; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.currentSubMenu = "" }
+                    Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
                 }
                 Text { text: "Wi-Fi Networks"; font.family: Vars.fontFamily; font.pixelSize: 20; font.weight: 600; color: Theme.on_primary; Layout.fillWidth: true }
                 
@@ -800,7 +822,7 @@ Item {
 
                 ColumnLayout {
                     id: wifiListContainer
-                    anchors.left: parent.left; anchors.right: parent.right; spacing: 8
+                    anchors.left: parent.left; anchors.right: parent.right; spacing: Vars.spacingSmall
 
                     Repeater {
                         model: wifiDevice ? wifiDevice.networks.values : []
@@ -809,7 +831,7 @@ Item {
                             color: modelData.connected ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.2) : Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.05)
                             
                             RowLayout {
-                                anchors.fill: parent; anchors.margins: 16; spacing: 16
+                                anchors.fill: parent; anchors.margins: Vars.spacingMedium; spacing: Vars.spacingMedium
                                 Text {
                                     font.family: "Material Symbols Outlined"; font.pixelSize: 24
                                     color: Theme.on_primary; text: "\ue63e"
@@ -842,14 +864,14 @@ Item {
         ColumnLayout {
             id: bluetoothSubMenuView
             anchors.fill: parent
-            anchors.margins: 20
-            spacing: 16
+            anchors.margins: Vars.spacingLarge
+            spacing: Vars.spacingMedium
             visible: root.currentSubMenu === "bluetooth"
 
             // Header matching the UI screenshot
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 16
+                spacing: Vars.spacingMedium
                 
                 Rectangle {
                     width: 40; height: 40; radius: Vars.radiusMedium
@@ -880,7 +902,7 @@ Item {
 
                 ColumnLayout {
                     id: bluetoothListContainer
-                    anchors.left: parent.left; anchors.right: parent.right; spacing: 8
+                    anchors.left: parent.left; anchors.right: parent.right; spacing: Vars.spacingSmall
 
                     Repeater {
                         model: adapter ? adapter.devices.values : []
@@ -889,7 +911,7 @@ Item {
                             color: modelData.connected ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.2) : Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.05)
                             
                             RowLayout {
-                                anchors.fill: parent; anchors.margins: 16; spacing: 16
+                                anchors.fill: parent; anchors.margins: Vars.spacingMedium; spacing: Vars.spacingMedium
                                 Text {
                                     font.family: "Material Symbols Outlined"; font.pixelSize: 24
                                     color: Theme.on_primary; text: "\ue1a7"
@@ -922,14 +944,14 @@ Item {
         ColumnLayout {
             id: displaySubMenuView
             anchors.fill: parent
-            anchors.margins: 20
-            spacing: 16
+            anchors.margins: Vars.spacingLarge
+            spacing: Vars.spacingMedium
             visible: root.currentSubMenu === "display"
 
             // Header matching the UI screenshot
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 16
+                spacing: Vars.spacingMedium
                 
                 Rectangle {
                     width: 40; height: 40; radius: Vars.radiusMedium
@@ -946,7 +968,7 @@ Item {
 
                 ColumnLayout {
                     id: displayListContainer
-                    anchors.left: parent.left; anchors.right: parent.right; spacing: 8
+                    anchors.left: parent.left; anchors.right: parent.right; spacing: Vars.spacingSmall
 
                     Repeater {
                         model: [1.0, 1.25, 1.5, 2.0]
@@ -955,7 +977,7 @@ Item {
                             color: Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.05)
                             
                             RowLayout {
-                                anchors.fill: parent; anchors.margins: 16; spacing: 16
+                                anchors.fill: parent; anchors.margins: Vars.spacingMedium; spacing: Vars.spacingMedium
                                 Text {
                                     font.family: "Material Symbols Outlined"; font.pixelSize: 24
                                     color: Theme.on_primary; text: "\ue30d"

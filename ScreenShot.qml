@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Io
+import "./Variables/variables.js" as Vars
 
 
 PanelWindow {
@@ -12,7 +13,7 @@ PanelWindow {
     
     required property bool visibleState
     visible: visibleState
-    signal closed
+    signal screenshotClosed
     signal openRequested
     property bool internalVisible: false
     property var m3Expressive: [0.05, 0.7, 0.1, 1.0]
@@ -35,7 +36,7 @@ PanelWindow {
         onExited: {
             frozenImage.source = "file:///tmp/qs_freeze.png?" + Date.now();
             frozenImage.visible = true;
-            dimLayer.opacity = 1.0; 
+            dimLayer.opacity = 0.15; 
         }
     }
 
@@ -54,15 +55,15 @@ PanelWindow {
         asynchronous: false 
     }
 
-    PhysicsString { id: sTL; anchors.fill: parent; visible: selectionBox.isDragging; anchorPoint: Qt.point(0, 0); targetPoint: Qt.point(selectionBox.x, selectionBox.y); stringColor: Theme.secondary }
-    PhysicsString { id: sTR; anchors.fill: parent; visible: selectionBox.isDragging; anchorPoint: Qt.point(root.width, 0); targetPoint: Qt.point(selectionBox.x + selectionBox.width, selectionBox.y); stringColor: Theme.secondary }
-    PhysicsString { id: sBL; anchors.fill: parent; visible: selectionBox.isDragging; anchorPoint: Qt.point(0, root.height); targetPoint: Qt.point(selectionBox.x, selectionBox.y + selectionBox.height); stringColor: Theme.secondary }
-    PhysicsString { id: sBR; anchors.fill: parent; visible: selectionBox.isDragging; anchorPoint: Qt.point(root.width, root.height); targetPoint: Qt.point(selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height); stringColor: Theme.secondary }
+    PhysicsString { id: sTL; anchors.fill: parent; visible: selectionBox.isDragging; anchorPoint: Qt.point(0, 0); targetPoint: Qt.point(selectionBox.x, selectionBox.y); stringColor: Theme.primary }
+    PhysicsString { id: sTR; anchors.fill: parent; visible: selectionBox.isDragging; anchorPoint: Qt.point(root.width, 0); targetPoint: Qt.point(selectionBox.x + selectionBox.width, selectionBox.y); stringColor: Theme.primary }
+    PhysicsString { id: sBL; anchors.fill: parent; visible: selectionBox.isDragging; anchorPoint: Qt.point(0, root.height); targetPoint: Qt.point(selectionBox.x, selectionBox.y + selectionBox.height); stringColor: Theme.primary }
+    PhysicsString { id: sBR; anchors.fill: parent; visible: selectionBox.isDragging; anchorPoint: Qt.point(root.width, root.height); targetPoint: Qt.point(selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height); stringColor: Theme.primary }
 
     Rectangle {
         id: dimLayer
         anchors.fill: parent
-        color: "#1a000000" // Slightly softer black
+        color: Theme.scrim // Unified scrim color
         opacity: 0.0
         Behavior on opacity {
             NumberAnimation { duration: 400; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
@@ -72,13 +73,13 @@ PanelWindow {
     Rectangle {
         id: selectionBox
         // Blanket Style: A soft, translucent fill instead of a completely empty box
-        color: Theme.secondary
-        opacity: 0.25 // The fill is highly transparent
+        color: Theme.primary
+        opacity: 0.15 // The fill is highly transparent
         
         // A softer border to match the aesthetic
-        border.color: Theme.secondary
-        border.width: 4 
-        radius: 8
+        border.color: Theme.primary
+        border.width: 2
+        radius: Vars.radiusSmall
         
         property bool isDragging: false
         visible: isDragging
@@ -150,7 +151,7 @@ PanelWindow {
         interval: 400
         onTriggered: {
             internalVisible = false;
-            root.closed();
+            root.screenshotClosed();
         }
     }
 
@@ -169,7 +170,7 @@ PanelWindow {
         onExited: {
             sattyProcess.running = true;
             internalVisible = false;
-            root.closed();
+            root.screenshotClosed();
         }
     }
 
