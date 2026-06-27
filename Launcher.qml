@@ -1,31 +1,25 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
-import "./Variables/colors.js" as Colors
 import "./Variables/variables.js" as Vars
 
 PanelWindow {
     id: launcherRoot
     exclusiveZone: -1
     aboveWindows: true
-
-    // 1. Property MUST be defined here
     required property bool visibleState
     visible: visibleState
 
     signal closeRequested()
     signal appLaunched()
 
-    // --- Added Sliding Window Logic ---
-    property int offset: 0
-    readonly property int viewLimit: 13
-    
-    // This dynamically updates whenever 'offset' changes
-    property var displayModel: {
+    property var filteredModel: {
+        var filterText = searchInput.text.toLowerCase();
         var all = DesktopEntries.applications.values;
-        return all.slice(offset, offset + viewLimit);
+        if (filterText === "") return all;
+        return all.filter(app => Vars.fuzzyMatch(filterText, app.name));
     }
-    // ----------------------------------
 
     HyprlandFocusGrab {
         active: launcherRoot.visible
@@ -45,136 +39,193 @@ PanelWindow {
     }
 
     color: "transparent"
-    implicitHeight: 100
+    implicitHeight: 180
 
     Rectangle {
         id: launcherRect
         anchors.fill: parent
-        color: Colors.primary.base
-        radius: Math.min(width, height) * Vars.radiusAmount
+        color: Theme.primary
+        radius: Vars.radiusExtraLarge
         opacity: visibleState ? 1.0 : 0.0
         scale: visibleState ? 1.0 : 0.95
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: 300
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: [0, 0, 0.05, 0.7, 0.1, 1.0, 1, 1]
-            }
+            NumberAnimation { duration: 300; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
         }
-
         Behavior on scale {
-            NumberAnimation {
-                duration: 300
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: [0, 0, 0.05, 0.7, 0.1, 1.0, 1, 1]
-            }
+            NumberAnimation { duration: 300; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
         }
 
         focus: true
         Keys.onEscapePressed: launcherRoot.appLaunched()
+        Keys.onDownPressed: appListView.focus = true
 
-        ListView {
-            id: appListView
-            anchors.fill: launcherRect
-            orientation: ListView.Horizontal
-            clip: true
-            leftMargin: 5
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 80
+            anchors.rightMargin: 80
+            anchors.topMargin: Vars.spacingLarge
+            anchors.bottomMargin: Vars.spacingLarge
+            spacing: Vars.spacingMedium
 
-            // --- Updated to use the filtered model ---
-            model: displayModel
-            // -----------------------------------------
+            Rectangle {
+                id: searchBox
+                Layout.fillWidth: true
+                Layout.preferredHeight: 44
+                color: searchInput.activeFocus ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.12) : Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08)
+                border.color: searchInput.activeFocus ? Theme.primary_container : "transparent"
+                border.width: searchInput.activeFocus ? 2 : 0
+                radius: Vars.radiusMedium
 
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.NoButton
-                // Added hoverEnabled to ensure wheel events are captured correctly
-                hoverEnabled: true
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Vars.spacingMedium
+                    anchors.rightMargin: Vars.spacingMedium
 
-                onWheel: wheel => {
-                    var total = DesktopEntries.applications.values.length;
-                    // Adjust offset instead of contentX
-                    if (wheel.angleDelta.y < 0) { 
-                        // Scroll Right: add one if not at the end
-                        if (offset + viewLimit < total) offset++;
-                    } else if (wheel.angleDelta.y > 0) {
-                        // Scroll Left: remove one if not at the start
-                        if (offset > 0) offset--;
+                    TextInput {
+                        id: searchInput
+                        Layout.fillWidth: true
+                        font.family: Vars.fontFamily
+                        font.pixelSize: 14
+                        color: Theme.on_primary
+                        focus: true
+                        selectByMouse: true
+
+                        Text {
+                            text: "Search apps..."
+                            font.family: Vars.fontFamily
+                            font.pixelSize: 14
+                            color: Theme.on_primary
+                            opacity: 0.6
+                            visible: !searchInput.text && !searchInput.activeFocus
+                        }
+
+                        Keys.onDownPressed: appListView.focus = true
+                        Keys.onReturnPressed: appListView.focus = true
+                    }
+
+                    Text {
+                        text: "✕"
+                        font.pixelSize: 14
+                        color: Theme.on_primary
+                        visible: searchInput.text.length > 0
+                        Layout.alignment: Qt.AlignVCenter
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: searchInput.text = ""
+                        }
                     }
                 }
             }
 
-            delegate: Item {
-                width: 140
-                height: parent.height
+            ListView {
+                id: appListView
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                orientation: ListView.Horizontal
+                clip: true
+                spacing: 4
+                model: launcherRoot.filteredModel
+                snapMode: ListView.SnapToItem
+                boundsBehavior: Flickable.StopAtBounds
 
-                Rectangle {
+                focus: true
+                keyNavigationEnabled: true
+                highlightFollowsCurrentItem: true
+                
+                highlightRangeMode: ListView.ApplyRange
+                preferredHighlightBegin: 20
+                preferredHighlightEnd: appListView.width - 20
+                highlightMoveDuration: 150
+
+                MouseArea {
                     anchors.fill: parent
-                    anchors.margins: 4
-                    color: Colors.primary.on_base
-                    // Perfectly matched curve logic
-                    radius: launcherRect.radius - anchors.margins
-                    opacity: itemMouseArea.containsMouse ? 1.0 : 0.0
+                    acceptedButtons: Qt.NoButton
+                    hoverEnabled: true
 
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 300
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: [0, 0.05, 0.7, 0.1, 1.0]
-                        }
+                    onWheel: wheel => {
+                        var delta = wheel.pixelDelta.y !== 0 ? wheel.pixelDelta.y : (wheel.angleDelta.y / 120) * 80;
+                        var newX = appListView.contentX - delta;
+
+                        var maxContentX = Math.max(0, appListView.contentWidth - appListView.width);
+                        appListView.contentX = Math.max(0, Math.min(newX, maxContentX));
                     }
                 }
 
-                MouseArea {
-                    id: itemMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    preventStealing: true
+                Keys.onReturnPressed: if (currentItem) currentItem.triggerSelection()
+                Keys.onSpacePressed: if (currentItem) currentItem.triggerSelection()
 
-                    onClicked: {
+                delegate: Item {
+                    id: delegateItem
+                    width: 110
+                    height: appListView.height
+
+                    function triggerSelection() {
                         Quickshell.execDetached({
                             command: modelData.command,
                             workingDirectory: modelData.workingDirectory
                         });
                         launcherRoot.appLaunched();
                     }
-                }
 
-                Column {
-                    anchors.fill: parent
-                    anchors.topMargin: 10
-                    anchors.bottomMargin: 10
-                    spacing: 8
-                    opacity: itemMouseArea.containsMouse ? 0.8 : 1.0
+                    property bool isCurrent: delegateItem.ListView.isCurrentItem && appListView.activeFocus
+                    
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        color: isCurrent ? Theme.primary_container : (itemMouseArea.containsMouse ? Qt.rgba(Theme.on_primary.r, Theme.on_primary.g, Theme.on_primary.b, 0.08) : "transparent")
+                        radius: Vars.radiusMedium
+                        border.color: Theme.on_primary
+                        border.width: isCurrent ? 2 : 0
 
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 300
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: [0, 0, 0.05, 0.7, 0.1, 1.0, 1, 1]
+                        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
+                    }
+
+                    MouseArea {
+                        id: itemMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        preventStealing: false
+                        cursorShape: Qt.PointingHandCursor
+
+                        onClicked: {
+                            appListView.currentIndex = index;
+                            delegateItem.triggerSelection();
                         }
                     }
 
-                    Image {
-                        width: 32
-                        height: 32
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        source: modelData.icon ? "image://icon/" + modelData.icon : ""
-                        fillMode: Image.PreserveAspectFit
-                        asynchronous: true
-                    }
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: Vars.spacingMedium
 
-                    Text {
-                        width: parent.width
-                        font.family: "Rubik"
-                        font.pixelSize: 13
-                        font.weight: Font.Medium
-                        text: modelData.name
-                        color: Colors.textColor
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        maximumLineCount: 1
-                        elide: Text.ElideRight
+                        Image {
+                            width: 36
+                            height: 36
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            source: modelData.icon ? "image://icon/" + modelData.icon : ""
+                            fillMode: Image.PreserveAspectFit
+                            asynchronous: true
+                            
+                            opacity: isCurrent ? 1.0 : (itemMouseArea.containsMouse ? 0.9 : 0.7)
+                            Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
+                        }
+
+                        Text {
+                            width: 90
+                            font.family: Vars.fontFamily
+                            font.pixelSize: 13
+                            font.weight: isCurrent ? Font.DemiBold : Font.Medium
+                            text: modelData.name
+                            
+                            color: isCurrent ? Theme.on_primary_container : Theme.on_primary
+                            opacity: isCurrent ? 1.0 : (itemMouseArea.containsMouse ? 0.8 : 0.6)
+                            
+                            horizontalAlignment: Text.AlignHCenter
+                            maximumLineCount: 1
+                            elide: Text.ElideRight
+                            
+                            Behavior on opacity { NumberAnimation { duration: 250 } }
+                        }
                     }
                 }
             }

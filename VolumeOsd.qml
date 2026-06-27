@@ -4,13 +4,11 @@ import Quickshell
 import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 
-import "./Variables/colors.js" as Colors
 import "./Variables/variables.js" as Vars
 
 Scope {
     id: root
     
-    property int spacingValue: 16
     property bool shouldShowOsd: false
     property real smoothVolume: Pipewire.defaultAudioSink?.audio?.volume ?? 0
 
@@ -33,7 +31,7 @@ Scope {
         NumberAnimation {
             duration: 250
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: root.m3Expressive
+            easing.bezierCurve: Vars.m3Expressive
         }
     }
 
@@ -131,7 +129,7 @@ Scope {
                 NumberAnimation {
                     duration: 350
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: root.m3Expressive
+                    easing.bezierCurve: Vars.m3Expressive
                 }
             }
 
@@ -139,17 +137,17 @@ Scope {
                 NumberAnimation {
                     duration: 250
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: root.m3Expressive
+                    easing.bezierCurve: Vars.m3Expressive
                 }
             }
 
-            color: Colors.primary.base
-            radius: Math.min(width, height) * Vars.radiusAmount
+            color: Theme.primary
+            radius: Vars.radiusExtraLarge
 
             RowLayout {
                 id: rowLayout
                 anchors.fill: parent
-                anchors.margins: spacingValue
+                anchors.margins: Vars.spacingMedium
 
                 Text {
                     id: iconText
@@ -158,7 +156,7 @@ Scope {
 
                     font.family: "Material Symbols Outlined"
                     font.pixelSize: 24
-                    color: Colors.primary.on_base
+                    color: Theme.on_primary
                     text: root.volumeIcon
 
                     onTextChanged: {
@@ -169,18 +167,28 @@ Scope {
 
                     SequentialAnimation {
                         id: iconPop
-                        NumberAnimation { target: iconText; property: "scale"; to: 1.25; duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: root.m3Expressive }
-                        NumberAnimation { target: iconText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: root.m3Expressive }
+                        NumberAnimation { target: iconText; property: "scale"; to: 1.25; duration: 150; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
+                        NumberAnimation { target: iconText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive }
                     }
 
                     // Click the icon to quickly toggle mute status
                     MouseArea {
+                        id: muteHover
                         anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             if (Pipewire.defaultAudioSink?.audio) {
                                 Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;
                             }
                         }
+                    }
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Vars.radiusMedium
+                        color: Theme.on_primary
+                        opacity: muteHover.pressed ? 0.12 : (muteHover.containsMouse ? 0.08 : 0.0)
+                        Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.BezierSpline; easing.bezierCurve: Vars.m3Expressive } }
                     }
                 }
 
@@ -189,15 +197,15 @@ Scope {
                     id: sliderTrack
                     Layout.fillWidth: true
                     implicitHeight: 12
-                    color: Colors.primary.container
-                    radius: osdContainer.radius - spacingValue
+                    color: Theme.surface_variant
+                    radius: Vars.radiusMedium
 
                     // Active Fill Bar
                     Rectangle {
                         anchors.left: parent.left
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
-                        color: Colors.primary.on_container
+                        color: Theme.primary
                         radius: parent.radius
                         width: parent.width * root.smoothVolume
                     }

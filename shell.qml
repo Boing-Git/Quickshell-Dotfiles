@@ -43,7 +43,7 @@ ShellRoot {
         // Binding the internal visibility state to your root state variable
         visibleState: root.screenshotVisible
 
-        onClosed: {
+        onScreenshotClosed: {
             root.screenshotVisible = false;
         }
     }
@@ -55,6 +55,10 @@ ShellRoot {
             root.launcherVisible = false;
         }
     }
+    NotificationDaemon {
+        id: notifDaemon
+    }
+
     VolumeOsd {}
 
     TopPills{}

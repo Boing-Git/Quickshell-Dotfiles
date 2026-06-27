@@ -1,0 +1,15 @@
+singleton NotificationService 1.0 NotificationService.qml
+TopPills 1.0 TopPills.qml
+NotificationDaemon 1.0 NotificationDaemon.qml
+NotificationData 1.0 NotificationData.qml
+ClockPill 1.0 ClockPill.qml
+ControlCenter 1.0 ControlCenter.qml
+HyprWorkspaces 1.0 HyprWorkspaces.qml
+Launcher 1.0 Launcher.qml
+ScreenShot 1.0 ScreenShot.qml
+StatusBar 1.0 StatusBar.qml
+VolumeOsd 1.0 VolumeOsd.qml
+WallpaperSwitcher 1.0 WallpaperSwitcher.qml
+
+NotificationCard 1.0 NotificationCard.qml
+singleton Theme 1.0 Variables/Theme.qml
